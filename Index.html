@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MyTracker Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Prevents highlighting text while tapping buttons on mobile */
+        * { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans pb-20">
+
+    <header class="bg-indigo-700 text-white p-6 rounded-b-3xl shadow-lg mb-6">
+        <h1 class="text-2xl font-bold">Daily Pulse</h1>
+        <p class="text-indigo-200 text-sm">Tasks & Finance</p>
+    </header>
+
+    <main class="px-4 space-y-6">
+        
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <h2 class="text-gray-400 uppercase text-xs font-bold tracking-widest mb-1">Total Spending</h2>
+            <div id="totalDisplay" class="text-3xl font-bold text-slate-800">₹0</div>
+            
+            <div class="mt-4 flex gap-2">
+                <input id="expName" type="text" placeholder="Item" class="w-1/2 bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                <input id="expAmt" type="number" placeholder="₹" class="w-1/4 bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                <button onclick="addExpense()" class="w-1/4 bg-indigo-600 text-white rounded-lg font-bold">+</button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <h2 class="text-slate-800 font-bold mb-4 flex justify-between items-center">
+                Tasks
+                <span id="taskCount" class="bg-indigo-100 text-indigo-600 text-xs px-2 py-1 rounded-full">0</span>
+            </h2>
+            
+            <div class="flex gap-2 mb-4">
+                <input id="taskIn" type="text" placeholder="What needs doing?" class="flex-grow bg-slate-50 border-none rounded-lg p-3 text-sm">
+                <button onclick="addTask()" class="bg-slate-800 text-white px-4 rounded-lg">Add</button>
+            </div>
+
+            <ul id="taskList" class="space-y-3">
+                </ul>
+        </div>
+    </main>
+
+    <script>
+        // --- DATA PERSISTENCE ---
+        let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+        let expenses = JSON.parse(localStorage.getItem('myExpenses')) || [];
+
+        function renderAll() {
+            const tList = document.getElementById('taskList');
+            tList.innerHTML = tasks.map((t, i) => `
+                <li class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <span class="text-sm ${t.done ? 'line-through text-gray-400' : ''}">${t.text}</span>
+                    <button onclick="toggleTask(${i})" class="text-xs font-bold ${t.done ? 'text-green-500' : 'text-indigo-600'}">
+                        ${t.done ? '✓' : 'Done'}
+                    </button>
+                </li>
+            `).join('');
+            document.getElementById('taskCount').innerText = tasks.length;
+
+            const total = expenses.reduce((sum, e) => sum + e.amt, 0);
+            document.getElementById('totalDisplay').innerText = "₹" + total.toLocaleString('en-IN');
+            localStorage.setItem('myTasks', JSON.stringify(tasks));
+            localStorage.setItem('myExpenses', JSON.stringify(expenses));
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskIn');
+            if(!input.value) return;
+            tasks.push({ text: input.value, done: false });
+            input.value = '';
+            renderAll();
+        }
+
+        function toggleTask(i) {
+            tasks[i].done = !tasks[i].done;
+            renderAll();
+        }
+
+        function addExpense() {
+            const n = document.getElementById('expName');
+            const a = document.getElementById('expAmt');
+            if(!n.value || !a.value) return;
+            expenses.push({ name: n.value,
